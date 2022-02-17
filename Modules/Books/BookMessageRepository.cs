@@ -5,11 +5,11 @@ namespace test.Modules.Books;
 
 public interface IBookMessageRepository
 {
-    void Send(string message, string queue);
+    void Send(string message, string queue, string exchange);
 }
 public class BookMessageRepository : IBookMessageRepository
 {
-    public void Send(string message, string queue)
+    public void Send(string message, string queue, string exchange)
     {
         var factory = new ConnectionFactory() { HostName = "localhost" };
             using(var connectionRabbit = factory.CreateConnection())
@@ -22,10 +22,12 @@ public class BookMessageRepository : IBookMessageRepository
                                     exclusive: false,
                                     autoDelete: false,
                                     arguments: null);
+                
+                channel.ExchangeDeclare(exchange, ExchangeType.Topic);
 
                 var body = Encoding.UTF8.GetBytes(message);
 
-                channel.BasicPublish(exchange: "",
+                channel.BasicPublish(exchange: exchange,
                                     routingKey: queue,
                                     basicProperties: properties,
                                     body: body);

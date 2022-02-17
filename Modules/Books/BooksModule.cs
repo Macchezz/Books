@@ -11,12 +11,6 @@ public class BooksModule: IModule
     private static IContainer Container;
     public IServiceCollection RegisterModules(IServiceCollection services, IConfiguration configuration)
     {
-        /**if (!services.Any(x => x.ServiceType == typeof(IConnectionFactory)))
-            services.AddSingleton<IConnectionFactory>(provider =>
-            {
-                var connectionString = configuration.GetValue<string>("DatabaseConnectionString");
-                return new SqlServerConnectionFactory(connectionString);
-            });**/
 
         var connectionString = configuration.GetValue<string>("DatabaseConnectionString");
         var builder = new ContainerBuilder();
@@ -38,7 +32,9 @@ public class BooksModule: IModule
             using(var scope = Container.BeginLifetimeScope())
             {
                 var service = scope.Resolve<IBookService>();
+                var messageService = scope.Resolve<IBookMessagesService>();
                 var book = service.GetById(new Models.BookId(id)).Result;
+                messageService.SendMessage($"Book with Id:{id} requested", "books.requests", "books");
                 return book is null 
                 ? Results.NotFound() 
                 : Results.Ok(book.ToResponse());
@@ -51,7 +47,7 @@ public class BooksModule: IModule
                 var service = scope.Resolve<IBookService>();
                 var messageService = scope.Resolve<IBookMessagesService>();
                 var books = service.GetAll().Result;
-                messageService.SendMessage("Books requested", "books");
+                messageService.SendMessage("All books requested", "books.requests", "books");
                 return Results.Ok(books.Select(book => book.ToResponse()).ToList());
             }
         });
@@ -60,7 +56,9 @@ public class BooksModule: IModule
             using(var scope = Container.BeginLifetimeScope())
             {
                 var service = scope.Resolve<IBookService>();
+                var messageService = scope.Resolve<IBookMessagesService>();
                 var bookResult = service.Execute(book.ToCommand()).Result;
+                messageService.SendMessage($"Book with Id:{bookResult.Id} created", "books.creations", "books");
                 return Results.Created($"/books/{bookResult.Id}", bookResult.ToResponse());
             }
         });
@@ -69,6 +67,8 @@ public class BooksModule: IModule
             using(var scope = Container.BeginLifetimeScope())
             {
                 var service = scope.Resolve<IBookService>();
+                var messageService = scope.Resolve<IBookMessagesService>();
+                messageService.SendMessage($"Book with Id:{book.Id} updated", "books.updates", "books");
                 var bookResult = service.Execute(book.ToCommand()).Result;
                 return Results.NoContent();
             }

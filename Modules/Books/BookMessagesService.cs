@@ -2,7 +2,7 @@ namespace test.Modules.Books;
 
 public interface IBookMessagesService
 {
-    void SendMessage(string message, string queue);
+    void SendMessage(string message, string queue, string exchange);
 }
 public class BookMessagesService : IBookMessagesService
 {
@@ -13,5 +13,5 @@ public class BookMessagesService : IBookMessagesService
         _repository = repository;
     }
 
-    public void SendMessage(string message, string queue) => _repository.Send(message, queue);
+    public void SendMessage(string message, string queue, string exchange) => _repository.Send(message, queue, exchange);
 }
