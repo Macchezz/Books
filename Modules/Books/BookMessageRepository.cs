@@ -5,13 +5,15 @@ namespace test.Modules.Books;
 
 public interface IBookMessageRepository
 {
-    void Send(string message, string queue, string exchange);
+    Task Send(string message, string queue, string exchange);
 }
 public class BookMessageRepository : IBookMessageRepository
 {
-    public void Send(string message, string queue, string exchange)
+    public Task Send(string message, string queue, string exchange)
     {
-        var factory = new ConnectionFactory() { HostName = "localhost" };
+        try
+        {
+            var factory = new ConnectionFactory() { HostName = "localhost" };
             using(var connectionRabbit = factory.CreateConnection())
             using(var channel = connectionRabbit.CreateModel())
             {
@@ -32,5 +34,11 @@ public class BookMessageRepository : IBookMessageRepository
                                     basicProperties: properties,
                                     body: body);
             }
+        } 
+        catch
+        {
+            throw;
+        }
+        return Task.CompletedTask;
     }
 }

@@ -58,7 +58,7 @@ public class BooksModule: IModule
                 var service = scope.Resolve<IBookService>();
                 var messageService = scope.Resolve<IBookMessagesService>();
                 var bookResult = service.Execute(book.ToCommand()).Result;
-                messageService.SendMessage($"Book with Id:{bookResult.Id} created", "books.creations", "books");
+                Task.Run(async () => await messageService.SendMessage($"Book with Id:{bookResult.Id} created", "books.creations", "books"));
                 return Results.Created($"/books/{bookResult.Id}", bookResult.ToResponse());
             }
         });
